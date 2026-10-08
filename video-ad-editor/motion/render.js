@@ -74,7 +74,7 @@ function encode(frameDir, fps, out, startNumber = 0, count = null) {
   if (mode === 'serve') { console.log(`▶ افتح: http://127.0.0.1:${port}/motion/engine.html?proj=/proj/${SAFE ? '&safe=1' : ''}\n  (Ctrl+C للإيقاف)`); return; }
   const browser = await puppeteer.launch({
     executablePath: CHROME, headless: true,
-    args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--enable-unsafe-webgpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--force-color-profile=srgb', '--hide-scrollbars', '--mute-audio', '--disable-features=CalculateNativeWinOcclusion'],
+    args: [...(process.platform === 'darwin' ? ['--use-angle=metal'] : ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']), '--enable-gpu', '--ignore-gpu-blocklist', '--enable-unsafe-webgpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--force-color-profile=srgb', '--hide-scrollbars', '--mute-audio', '--disable-features=CalculateNativeWinOcclusion'],
   });
   const R = path.join(PROJ, 'renders');
   try {
