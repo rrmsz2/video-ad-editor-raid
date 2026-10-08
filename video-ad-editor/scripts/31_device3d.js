@@ -53,7 +53,7 @@ const srv = http.createServer((req, res) => {
   const CFG = { size: [OW, OH], device: D.device || 'phone', bg: D.bg || [theme.bg || '#0B0A12', theme.acc ? theme.acc + '66' : '#3B2A6B'],
     acc: D.acc || theme.acc || '#D97757', ink: D.ink || theme.ink || '#F0EBE0', font: D.font || theme.font || 'Cairo', metal: D.metal, fit: D.fit || 'contain', reflect: D.reflect ?? 0.25 };
   const b = await puppeteer.launch({ executablePath: CHROME, headless: 'new',
-    args: ['--no-sandbox', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--enable-webgl', '--force-device-scale-factor=1'] });
+    args: ['--no-sandbox', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']), '--enable-gpu', '--ignore-gpu-blocklist', '--enable-webgl', '--force-device-scale-factor=1'] });
   const p = await b.newPage(); await p.setViewport({ width: OW, height: OH });
   p.on('pageerror', e => console.log('ERR', String(e).slice(0, 200)));
   await p.evaluateOnNewDocument(c => { window.CFG = c; }, CFG);
