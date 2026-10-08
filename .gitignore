@@ -4,3 +4,4 @@ node_modules/
 .DS_Store
 majed-video.plugin
 work-*/
+video-ad-editor/bin/
