@@ -1,0 +1,354 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Cairo;font-weight:400;src:url(fonts/cairo-arabic-400-normal.woff2)}
+@font-face{font-family:Cairo;font-weight:700;src:url(fonts/cairo-arabic-700-normal.woff2)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/cairo-arabic-800-normal.woff2);unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF,U+200C-200E}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/cairo-latin-800-normal.woff2);unicode-range:U+0000-00FF}
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/cairo-arabic-900-normal.woff2)}
+@font-face{font-family:Amiri;font-weight:400;src:url(fonts/amiri-arabic-400-normal.woff2)}
+@font-face{font-family:Amiri;font-weight:700;src:url(fonts/amiri-arabic-700-normal.woff2)}
+@font-face{font-family:Kufi;font-weight:500;src:url(fonts/reem-kufi-arabic-500-normal.woff2)}
+@font-face{font-family:Kufi;font-weight:700;src:url(fonts/reem-kufi-arabic-700-normal.woff2)}
+html,body{margin:0;background:#000;overflow:hidden}
+canvas{display:block}
+</style></head><body>
+<canvas id="c"></canvas>
+<script>
+// ---------- theme ----------
+const TH = { bg0:'#0B3A33', bg1:'#072522', bg2:'#031110', ink:'#F7F1E3', acc:'#D9AE55', acc2:'#F3D58C', card:'rgba(4,22,20,0.78)' };
+let D = null;            // data.json (set by renderer)
+let W = 1080, H = 1920, MODE = 'reel';
+const cv = document.getElementById('c'); const X = cv.getContext('2d');
+const P = document.createElement('canvas'); const PX = P.getContext('2d');   // person cutout
+const ease = x => x<=0?0:x>=1?1:x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eob = x => { x=Math.min(1,Math.max(0,x)); const c1=1.4,c3=c1+1; return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2); };
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const win=(t,s,e,fi=.35,fo=.35)=>clamp(Math.min((t-s)/fi,(e-t)/fo));
+function rnd(i){ const x=Math.sin(i*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+
+// ---------- pattern tile (8-point star girih) ----------
+let PAT=null;
+function makePattern(){
+  const s=180, c=document.createElement('canvas'); c.width=c.height=s; const g=c.getContext('2d');
+  g.strokeStyle=TH.acc; g.lineWidth=2; g.globalAlpha=1;
+  const star=(cx,cy,r)=>{ for(const rot of [0,Math.PI/4]){ g.save(); g.translate(cx,cy); g.rotate(rot); g.strokeRect(-r,-r,2*r,2*r); g.restore(); } g.beginPath(); g.arc(cx,cy,r*.42,0,7); g.stroke(); };
+  for(const [x,y] of [[0,0],[s,0],[0,s],[s,s]]) star(x,y,46);
+  star(s/2,s/2,46);
+  g.beginPath(); g.moveTo(s/2,0); g.lineTo(s/2,s*.18); g.moveTo(s/2,s); g.lineTo(s/2,s*.82);
+  g.moveTo(0,s/2); g.lineTo(s*.18,s/2); g.moveTo(s,s/2); g.lineTo(s*.82,s/2); g.stroke();
+  PAT = X.createPattern(c,'repeat');
+}
+
+// ---------- geometry per mode ----------
+function G(){
+  if(MODE==='reel') return { headX:540, headY:760, archW:900, archTop:430, archBase:H+20 };
+  return { headX:1400, headY:330, archW:820, archTop:40, archBase:H+20 };
+}
+
+function rosette(cx,cy,r,rot,alpha){
+  X.save(); X.translate(cx,cy); X.rotate(rot); X.globalAlpha=alpha; X.strokeStyle=TH.acc; X.lineWidth=2.2;
+  for(let k=0;k<2;k++){ X.beginPath(); for(let i=0;i<=16;i++){ const a=i*Math.PI*2/16+k*Math.PI/16; const rr=i%2? r*.72 : r; X.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);} X.stroke(); r*=.8; }
+  X.beginPath(); X.arc(0,0,r*.55,0,7); X.stroke();
+  for(let i=0;i<16;i++){ const a=i*Math.PI/8; X.beginPath(); X.moveTo(Math.cos(a)*r*.55,Math.sin(a)*r*.55); X.lineTo(Math.cos(a)*r*1.25,Math.sin(a)*r*1.25); X.stroke(); }
+  X.restore();
+}
+
+function archPath(cx,top,w,base){
+  const hw=w/2, sh=top+w*0.42;   // shoulder height
+  X.beginPath(); X.moveTo(cx-hw,base); X.lineTo(cx-hw,sh);
+  X.bezierCurveTo(cx-hw,sh-w*.22, cx-w*.12,top+w*.08, cx,top);
+  X.bezierCurveTo(cx+w*.12,top+w*.08, cx+hw,sh-w*.22, cx+hw,sh);
+  X.lineTo(cx+hw,base);
+}
+
+function drawBack(t){
+  const g=G();
+  // base gradient
+  const rg=X.createRadialGradient(g.headX,g.headY,40,g.headX,g.headY,Math.max(W,H)*.85);
+  rg.addColorStop(0,TH.bg0); rg.addColorStop(.55,TH.bg1); rg.addColorStop(1,TH.bg2);
+  X.fillStyle=rg; X.fillRect(0,0,W,H);
+  // drifting pattern
+  X.save(); X.globalAlpha=.075; X.translate(-(t*6)%180, -(t*4)%180); X.fillStyle=PAT; X.fillRect(0,0,W+360,H+360); X.restore();
+  // arch (mihrab) with inner glow
+  X.save();
+  archPath(g.headX,g.archTop,g.archW,g.archBase);
+  const ig=X.createLinearGradient(0,g.archTop,0,H); ig.addColorStop(0,'rgba(217,174,85,0.16)'); ig.addColorStop(.5,'rgba(217,174,85,0.05)'); ig.addColorStop(1,'rgba(0,0,0,0)');
+  X.fillStyle=ig; X.fill();
+  X.lineWidth=4; X.strokeStyle='rgba(217,174,85,0.75)'; X.shadowColor='rgba(243,213,140,.6)'; X.shadowBlur=18; X.stroke();
+  X.shadowBlur=0;
+  archPath(g.headX,g.archTop+34,g.archW-68,g.archBase); X.lineWidth=1.6; X.strokeStyle='rgba(217,174,85,0.45)'; X.stroke();
+  X.restore();
+  // halo behind head
+  const hl=X.createRadialGradient(g.headX,g.headY,0,g.headX,g.headY,MODE==='reel'?520:430);
+  hl.addColorStop(0,'rgba(243,213,140,0.30)'); hl.addColorStop(.45,'rgba(217,174,85,0.10)'); hl.addColorStop(1,'rgba(217,174,85,0)');
+  X.fillStyle=hl; X.fillRect(0,0,W,H);
+  rosette(g.headX,g.headY-(MODE==='reel'?40:20),MODE==='reel'?330:280,t*.05,.16);
+  // soft light from above
+  { const lg=X.createLinearGradient(0,0,0,H*.6); lg.addColorStop(0,'rgba(243,213,140,0.10)'); lg.addColorStop(1,'rgba(243,213,140,0)');
+    X.save(); X.globalCompositeOperation='lighter'; X.globalAlpha=.8+.2*Math.sin(t*.6); X.fillStyle=lg;
+    X.beginPath(); X.moveTo(g.headX-120,0); X.lineTo(g.headX+120,0); X.lineTo(g.headX+W*.45,H*.6); X.lineTo(g.headX-W*.45,H*.6); X.fill(); X.restore(); }
+  // dust particles
+  X.save(); X.globalCompositeOperation='lighter';
+  for(let i=0;i<70;i++){
+    const sp=8+rnd(i)*22, x=(rnd(i+3)*W + Math.sin(t*.4+i)*20), y=((rnd(i+7)*H - t*sp)%H+H)%H;
+    const r=1+rnd(i+11)*2.6, a=.25+.35*(.5+.5*Math.sin(t*1.3+i*2.1));
+    X.globalAlpha=a; X.fillStyle=TH.acc2; X.beginPath(); X.arc(x,y,r,0,7); X.fill(); }
+  X.restore();
+  // vignette
+  const vg=X.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.max(W,H)*.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.55)'); X.fillStyle=vg; X.fillRect(0,0,W,H);
+}
+
+// ---------- person ----------
+function drawPerson(t, frameImg, maskImg, fit){
+  P.width=frameImg.width; P.height=frameImg.height;
+  PX.globalCompositeOperation='source-over'; PX.drawImage(frameImg,0,0);
+  PX.globalCompositeOperation='destination-in'; PX.drawImage(maskImg,0,0,P.width,P.height);
+  // hook punch-in (motion in first second)
+  const z = 1 + .07*(1-ease(clamp(t/0.9)));
+  const s=fit.s*z, w=P.width*s, h=P.height*s;
+  const x=fit.cx - w/2, y=fit.bottom - h + (fit.dy||0);
+  X.save();
+  X.shadowColor='rgba(0,0,0,0.55)'; X.shadowBlur=60; X.shadowOffsetY=18;
+  X.drawImage(P,x,y,w,h);
+  X.restore();
+  // soft gold rim: thin additive pass
+  X.save(); X.globalCompositeOperation='lighter'; X.globalAlpha=.06; X.drawImage(P,x,y-2,w,h); X.restore();
+}
+
+// ---------- text helpers ----------
+function rr(x,y,w,h,r){ X.beginPath(); X.roundRect(x,y,w,h,r); }
+function ornLine(cx,y,len,a){
+  X.save(); X.globalAlpha=a; X.strokeStyle=TH.acc; X.fillStyle=TH.acc; X.lineWidth=2.5;
+  X.beginPath(); X.moveTo(cx-len,y); X.lineTo(cx-18,y); X.moveTo(cx+18,y); X.lineTo(cx+len,y); X.stroke();
+  X.save(); X.translate(cx,y); X.rotate(Math.PI/4); X.fillRect(-8,-8,16,16); X.restore();
+  X.restore();
+}
+
+// ---------- captions ----------
+function drawCaptions(t){
+  if(!D.lines) return;
+  const L = D.lines.find(l=>t>=l.s-0.04 && t<l.e+0.12);
+  if(!L) return;
+  const C = MODE==='reel' ? {cx:520, cy:1395, size:66, maxW:820} : {cx:540, cy:965, size:60, maxW:900};
+  const a = clamp((t-(L.s-0.04))/0.12)*clamp((L.e+0.12-t)/0.12);
+  X.save(); X.direction='rtl'; X.textBaseline='middle';
+  X.font=`800 ${C.size}px Cairo`;
+  const ws=L.words.map(i=>D.words[i]);
+  const sp=X.measureText(' ').width*1.1;
+  const widths=ws.map(w=>X.measureText(w.w).width);
+  const tot=widths.reduce((a,b)=>a+b,0)+sp*(ws.length-1);
+  const padX=40, ch=C.size*1.55;
+  const pop=eob(clamp((t-L.s)/0.22));
+  X.globalAlpha=a;
+  X.translate(C.cx,C.cy); X.scale(.9+.1*pop,.9+.1*pop);
+  X.fillStyle=TH.card; rr(-tot/2-padX,-ch/2,tot+2*padX,ch,ch/2); X.fill();
+  X.strokeStyle='rgba(217,174,85,.55)'; X.lineWidth=2; X.stroke();
+  // RTL: first word at right
+  let x=tot/2;
+  ws.forEach((w,k)=>{
+    const ww=widths[k]; const cx=x-ww/2;
+    const on = t>=w.s-0.03; const cur = t>=w.s-0.03 && (k===ws.length-1 || t<ws[k+1].s-0.03);
+    X.save(); X.translate(cx,4);
+    if(cur){ const p=eob(clamp((t-w.s+0.03)/0.18)); X.scale(1+.06*p,1+.06*p); }
+    X.textAlign='center';
+    X.fillStyle = w.hot ? TH.acc2 : (on ? TH.ink : 'rgba(247,241,227,0.45)');
+    if(cur && !w.hot) X.fillStyle=TH.acc2;
+    if(w.hot && on){ X.shadowColor='rgba(243,213,140,.55)'; X.shadowBlur=18; }
+    X.fillText(w.w,0,0);
+    X.restore();
+    x-=ww+sp;
+  });
+  X.restore();
+}
+
+// ---------- progress bar ----------
+function drawProgress(t){
+  const p=clamp(t/D.dur);
+  if(MODE==='reel'){ const x0=140,x1=940,y=1492; X.fillStyle='rgba(247,241,227,.18)'; rr(x0,y-3,x1-x0,6,3); X.fill();
+    X.fillStyle=TH.acc; rr(x1-(x1-x0)*p,y-3,(x1-x0)*p,6,3); X.fill(); }
+  else { X.fillStyle='rgba(247,241,227,.12)'; X.fillRect(0,H-6,W,6); X.fillStyle=TH.acc; X.fillRect(W-W*p,H-6,W*p,6); }
+}
+
+// ---------- header / title ----------
+function drawHeader(t){
+  const S=D.scenes, hookE=S.hook[1];
+  const pyr = S.levels.some(l=>t>=l.s-.4 && t<l.e+.4) || (t>=S.pillars.s-.4 && t<S.pillars.e+.4) || t>=S.summary-.4;
+  // big hook title
+  const hk = win(t,S.hook[0],hookE,.25,.4);
+  if(MODE==='reel'){
+    if(hk>0){
+      X.save(); X.globalAlpha=hk; X.textAlign='center'; X.direction='rtl'; X.textBaseline='middle';
+      const sc=eob(clamp((t-.05)/.5)); X.translate(540,330); X.scale(.8+.2*sc,.8+.2*sc);
+      X.shadowColor='rgba(0,0,0,.6)'; X.shadowBlur=24;
+      X.font='700 132px Kufi'; X.fillStyle=TH.acc2; X.fillText('مراتب الدين',0,0);
+      X.shadowBlur=0; ornLine(0,95,250,hk);
+      X.font='700 50px Cairo'; X.fillStyle=TH.ink;
+      X.fillText('الإسلام  •  الإيمان  •  الإحسان',0,160);
+      X.restore();
+    }
+    const hd = clamp((t-hookE)/.4)*(pyr?0:1);
+    if(hd>0){
+      X.save(); X.globalAlpha=hd*.95; X.textAlign='center'; X.direction='rtl'; X.textBaseline='middle';
+      X.font='700 54px Kufi'; X.fillStyle=TH.acc2; X.fillText('مراتب الدين',540,215);
+      ornLine(540,262,170,hd*.9); X.restore();
+    }
+  } else {
+    // landscape: persistent title on the left panel
+    X.save(); X.textAlign='center'; X.direction='rtl'; X.textBaseline='middle';
+    const a=clamp(t/.4); X.globalAlpha=a; const sc=eob(clamp(t/.5));
+    X.translate(540,150); X.scale(.85+.15*sc,.85+.15*sc);
+    X.shadowColor='rgba(0,0,0,.6)'; X.shadowBlur=20;
+    X.font='700 110px Kufi'; X.fillStyle=TH.acc2; X.fillText('مراتب الدين',0,0);
+    X.shadowBlur=0; ornLine(0,80,260,a);
+    X.font='700 40px Cairo'; X.fillStyle=TH.ink; X.globalAlpha=a*.9;
+    X.fillText('حديث جبريل عليه السلام',0,135);
+    X.restore();
+    const busy = S.levels.some(l=>t>=l.s-.4 && t<l.e+.4) || (t>=S.pillars.s-.4 && t<S.pillars.e+.4) || t>=S.summary-.4 || (t>=S.name[0]&&t<S.name[1]);
+    const qa = clamp((t-S.hook[1])/.5) * (1-clamp(busy?1:0));
+    if(qa>0){ X.save(); X.globalAlpha=qa*.9; rosette(540,500,170,t*.08,.5); X.restore(); }
+  }
+}
+
+// ---------- the three levels (pyramid) ----------
+const LV=[{k:'islam',t:'الإسلام',d:'أعمال الظاهر'},{k:'iman',t:'الإيمان',d:'أعمال القلب'},{k:'ihsan',t:'الإحسان',d:'أعلى المراتب'}];
+function drawLevels(t){
+  const S=D.scenes;
+  let vis=0, act=-1, intro=0;
+  const cur=S.levels.find(l=>t>=l.s-.4 && t<l.e+.4);
+  if(cur){ vis=win(t,cur.s-.4,cur.e+.4,.4,.4); act=LV.findIndex(v=>v.k===cur.k); intro=cur.s; }
+  else if(t>=S.summary){ vis=clamp((t-S.summary)/.4); act=3; intro=S.summary; }
+  else return;
+  if(vis<=0) return;
+  const R = MODE==='reel' ? {cx:540,top:175,h:118,gap:14,w0:300,w1:860} : {cx:540,top:350,h:105,gap:14,w0:340,w1:860};
+  X.save(); X.globalAlpha=vis; X.direction='rtl'; X.textBaseline='middle'; X.textAlign='center';
+  for(let i=2;i>=0;i--){                  // top (ihsan, i=2) to bottom (islam, i=0)
+    const row=2-i, y=R.top+row*(R.h+R.gap);
+    const w=R.w0+(R.w1-R.w0)*(i===2?0:i===1?.5:1);
+    const app=eob(clamp((t-intro-(2-row)*.08+.35)/.45));
+    const on = act===i || act===3, lit = act>=0 && i<=act && act!==3;
+    X.save(); X.translate(R.cx,y+R.h/2); X.scale(.85+.15*app,.85+.15*app); X.globalAlpha=vis*clamp(app*1.4);
+    // trapezoid step
+    const wt=w-70, wb=w;
+    X.beginPath(); X.moveTo(-wt/2,-R.h/2); X.lineTo(wt/2,-R.h/2); X.lineTo(wb/2,R.h/2); X.lineTo(-wb/2,R.h/2); X.closePath();
+    if(on){ const gg=X.createLinearGradient(0,-R.h/2,0,R.h/2); gg.addColorStop(0,'#F3D58C'); gg.addColorStop(1,'#C9963B'); X.fillStyle=gg;
+      X.shadowColor='rgba(243,213,140,.7)'; X.shadowBlur=act===3?10:30; }
+    else X.fillStyle= lit ? 'rgba(217,174,85,.30)' : 'rgba(4,22,20,.80)';
+    X.fill(); X.shadowBlur=0; X.lineWidth=2.5; X.strokeStyle='rgba(243,213,140,.85)'; X.stroke();
+    X.fillStyle = on ? '#0A2A26' : TH.ink;
+    const big = MODE==='reel'?58:58;
+    X.font=`800 ${big}px Cairo`; X.fillText(LV[i].t,0,on&&act!==3? -14:0);
+    if(on && act!==3){ X.font='700 30px Cairo'; X.fillStyle='rgba(10,42,38,.85)'; X.fillText(LV[i].d,0,34); }
+    X.restore();
+  }
+  X.restore();
+}
+
+// ---------- pillars of Islam ----------
+function drawPillars(t){
+  const S=D.scenes.pillars; const vis=win(t,S.s-.35,S.e+.35,.35,.4); if(vis<=0) return;
+  const top = MODE==='reel'?175:345;
+  X.save(); X.globalAlpha=vis; X.direction='rtl'; X.textAlign='center'; X.textBaseline='middle';
+  const hp=eob(clamp((t-S.s+.35)/.45));
+  X.save(); X.translate(540,top+30); X.scale(.85+.15*hp,.85+.15*hp);
+  X.font='700 50px Kufi'; X.fillStyle=TH.acc2; X.shadowColor='rgba(0,0,0,.6)'; X.shadowBlur=16; X.fillText('أركان الإسلام',0,0); X.restore();
+  ornLine(540,top+78,200,vis);
+  const pos=[[850,top+165],[540,top+165],[230,top+165],[695,top+300],[385,top+300]];
+  S.items.forEach(([lab,ts],i)=>{
+    const nxt = i<S.items.length-1 ? S.items[i+1][1] : S.e;
+    const on=t>=ts-.08, cur=on && t<nxt-.08;
+    const ap=eob(clamp((t-(S.s-.35)-i*.07)/.45));
+    const pp=on?eob(clamp((t-ts+.08)/.3)):0;
+    const [x,y]=pos[i], w=296, h=104;
+    X.save(); X.translate(x,y); const sc=(.8+.2*ap)*(1+.06*pp*(cur?1:0)); X.scale(sc,sc); X.globalAlpha=vis*clamp(ap*1.5);
+    rr(-w/2,-h/2,w,h,h/2);
+    if(on){ const gg=X.createLinearGradient(0,-h/2,0,h/2); gg.addColorStop(0,'#F3D58C'); gg.addColorStop(1,'#C9963B'); X.fillStyle=gg;
+      if(cur){ X.shadowColor='rgba(243,213,140,.75)'; X.shadowBlur=30; } }
+    else X.fillStyle='rgba(4,22,20,.82)';
+    X.fill(); X.shadowBlur=0; X.lineWidth=2.5; X.strokeStyle='rgba(243,213,140,.85)'; X.stroke();
+    X.font=`800 ${lab.length>6?40:44}px Cairo`; X.fillStyle= on ? '#0A2A26' : 'rgba(247,241,227,.55)'; X.fillText(lab,24,4);
+    // number medallion (right side, RTL start)
+    X.beginPath(); X.arc(-w/2+40,0,24,0,7); X.fillStyle= on ? '#0A2A26' : 'rgba(217,174,85,.25)'; X.fill();
+    X.font='800 30px Cairo'; X.fillStyle= on ? TH.acc2 : TH.ink; X.fillText(String(i+1),-w/2+40,3);
+    X.restore();
+  });
+  X.restore();
+}
+
+// ---------- transitions (gold light sweep on cuts) ----------
+function drawTransitions(t){
+  for(const c of [...D.scenes.cuts, D.scenes.jump]){
+    const d=t-c; if(d<-.22||d>.3) continue;
+    const p=clamp((d+.22)/.52);
+    X.save(); X.globalCompositeOperation='lighter';
+    const a=Math.sin(Math.PI*p);
+    const x=W*(1.2-1.4*ease(p));
+    const g=X.createLinearGradient(x-W*.45,0,x+W*.45,0);
+    g.addColorStop(0,'rgba(243,213,140,0)'); g.addColorStop(.5,`rgba(243,213,140,${.28*a})`); g.addColorStop(1,'rgba(243,213,140,0)');
+    X.fillStyle=g; X.fillRect(0,0,W,H);
+    X.globalAlpha=.10*a; X.fillStyle='#F7F1E3'; X.fillRect(0,0,W,H);
+    X.restore();
+  }
+}
+
+// ---------- speaker name lower third ----------
+function drawName(t){
+  const [s,e]=D.scenes.name; const a=win(t,s,e,.35,.35); if(a<=0) return;
+  const R = MODE==='reel' ? {x:540,y:1215} : {x:540,y:560};
+  const p=ease(clamp((t-s)/.5));
+  X.save(); X.globalAlpha=a; X.direction='rtl'; X.textBaseline='middle'; X.textAlign='center';
+  X.translate(R.x,R.y);
+  const w=560*p+40;
+  X.fillStyle='rgba(4,22,20,.85)'; rr(-w/2,-62,w,124,22); X.fill(); X.strokeStyle=TH.acc; X.lineWidth=2.5; X.stroke();
+  X.beginPath(); X.rect(-w/2,-62,w,124); X.clip();
+  X.font='800 54px Cairo'; X.fillStyle=TH.ink; X.fillText('إسلام حجازي',0,-18);
+  X.font='700 34px Cairo'; X.fillStyle=TH.acc2; X.fillText('أبو معاذ',0,32);
+  X.restore();
+}
+
+// ---------- outro ----------
+function drawOutro(t){
+  const s=D.scenes.outro[0]; const a=clamp((t-s)/.45); if(a<=0) return;
+  X.save(); X.globalAlpha=a; X.direction='rtl'; X.textAlign='center'; X.textBaseline='middle';
+  const R = MODE==='reel' ? {x:540,y:1215,w:760} : {x:540,y:800,w:820};
+  const p=eob(clamp((t-s)/.5)); X.translate(R.x,R.y); X.scale(.85+.15*p,.85+.15*p);
+  X.fillStyle='rgba(4,22,20,.88)'; rr(-R.w/2,-80,R.w,160,28); X.fill(); X.strokeStyle=TH.acc; X.lineWidth=3; X.stroke();
+  X.font='800 50px Cairo'; X.fillStyle=TH.acc2; X.fillText('شاركها لتعمّ الفائدة',0,-24);
+  X.font='700 34px Cairo'; X.fillStyle=TH.ink; X.fillText('إسلام حجازي  •  أبو معاذ',0,36);
+  X.restore();
+}
+
+// ---------- main ----------
+async function setup(data, mode){
+  D=data; MODE=mode; W = mode==='reel'?1080:1920; H = mode==='reel'?1920:1080;
+  cv.width=W; cv.height=H; makePattern();
+  await Promise.all(['800 40px Cairo','800 40px Cairo|123','700 40px Cairo','900 40px Cairo','700 40px Kufi','700 40px Amiri'].map(f=>document.fonts.load(f.split('|')[0],f.includes('|')?'123':'مراتب')));
+  return true;
+}
+function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+async function frame(t, fsrc, msrc, fit){
+  const [fi,mi]=await Promise.all([loadImg(fsrc),loadImg(msrc)]);
+  X.setTransform(1,0,0,1,0,0); X.globalAlpha=1; X.globalCompositeOperation='source-over';
+  drawBack(t);
+  drawPerson(t,fi,mi,fit);
+  drawLevels(t); drawPillars(t); drawHeader(t); drawName(t); drawOutro(t); drawCaptions(t); drawProgress(t); drawTransitions(t);
+  return true;
+}
+</script></body></html>
+<script>
+async function cover(fsrc, msrc, fit){
+  const [fi,mi]=await Promise.all([loadImg(fsrc),loadImg(msrc)]);
+  X.setTransform(1,0,0,1,0,0); drawBack(4); drawPerson(5,fi,mi,fit);
+  X.save(); X.direction='rtl'; X.textAlign='center'; X.textBaseline='middle';
+  const R = MODE==='reel' ? {x:540,y1:1150,y2:1320,f1:190,f2:70,card:[90,1020,900,420]} : {x:520,y1:430,y2:610,f1:200,f2:72,card:null};
+  if(R.card){ const [x,y,w,h]=R.card; const g=X.createLinearGradient(0,y,0,H); g.addColorStop(0,'rgba(4,22,20,0)'); g.addColorStop(.2,'rgba(4,22,20,.85)'); g.addColorStop(1,'rgba(4,22,20,.92)'); X.fillStyle=g; X.fillRect(0,y,W,H-y); }
+  X.shadowColor='rgba(0,0,0,.7)'; X.shadowBlur=30;
+  X.font=`700 ${R.f1}px Kufi`; X.fillStyle=TH.acc2; X.fillText('مراتب الدين',R.x,R.y1);
+  X.shadowBlur=0; ornLine(R.x,R.y1+R.f1*.62,300,1);
+  X.font=`800 ${R.f2}px Cairo`; X.fillStyle=TH.ink; X.fillText('حديث جبريل',R.x,R.y2);
+  if(MODE!=='reel'){ X.font='700 46px Cairo'; X.fillStyle=TH.acc2; X.fillText('الإسلام • الإيمان • الإحسان',R.x,R.y2+100);
+    X.font='700 40px Cairo'; X.fillStyle='rgba(247,241,227,.85)'; X.fillText('إسلام حجازي • أبو معاذ',R.x,R.y2+190); }
+  X.restore(); return true;
+}
+</script>
