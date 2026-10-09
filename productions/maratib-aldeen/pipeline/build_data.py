@@ -1,7 +1,14 @@
 import json, re, wave, numpy as np
 FPS=30
 # segments: (clip, src_start, src_end)
-SEG=[(2,1.25,24.62),(3,0.00,5.05),(3,5.80,24.35),(1,8.62,20.00)]
+# text-only bridge for the part missing from the recordings (verbatim from Sahih Muslim 8 / Nawawi 2)
+BLOCKS=[{'q':'فَأَخْبِرْنِي عَنِ الْإِيمَانِ','qd':2.3,'chips':['بِاللَّهِ','وَمَلَائِكَتِهِ','وَكُتُبِهِ','وَرُسُلِهِ','وَالْيَوْمِ الْآخِرِ','وَتُؤْمِنَ بِالْقَدَرِ خَيْرِهِ وَشَرِّهِ'],'lead':'أَنْ تُؤْمِنَ','title':'أركان الإيمان','ad':7.4,'tag':'قَالَ: صَدَقْتَ','tagd':1.7,'lv':'iman'},
+        {'q':'فَأَخْبِرْنِي عَنِ الْإِحْسَانِ','qd':2.3,'a':'أَنْ تَعْبُدَ اللَّهَ كَأَنَّكَ تَرَاهُ، فَإِنْ لَمْ تَكُنْ تَرَاهُ فَإِنَّهُ يَرَاكَ','ad':6.0,'lv':'ihsan'},
+        {'q':'فَأَخْبِرْنِي عَنِ السَّاعَةِ','qd':2.2,'a':'مَا الْمَسْؤُولُ عَنْهَا بِأَعْلَمَ مِنَ السَّائِلِ','ad':4.2,'hd':'الساعة وأماراتها'},
+        {'q':'فَأَخْبِرْنِي عَنْ أَمَارَاتِهَا','qd':2.2,'a':'أَنْ تَلِدَ الْأَمَةُ رَبَّتَهَا، وَأَنْ تَرَى الْحُفَاةَ الْعُرَاةَ الْعَالَةَ رِعَاءَ الشَّاءِ يَتَطَاوَلُونَ فِي الْبُنْيَانِ','ad':8.0,'hd':'الساعة وأماراتها'},
+        {'n':'ثُمَّ انْطَلَقَ','nd':2.0}]
+TD=round(sum(b.get('qd',0)+b.get('ad',0)+b.get('tagd',0)+b.get('nd',0) for b in BLOCKS)+0.8,2)
+SEG=[(2,1.25,24.62),(3,0.00,5.05),(3,5.80,24.35),('T',0,TD),(1,8.62,20.00)]
 # corrected phrases per clip: (start,end,text)  — text from the recitation (Sahih Muslim, hadith Jibril)
 PH={2:[(1.479,3.674,'عن عمر بن الخطاب | رضي الله عنه قال'),
        (3.971,8.386,'بينما نحن جلوس | عند رسول الله | صلى الله عليه وسلم | ذات يوم'),
@@ -42,7 +49,7 @@ def map_t(c,t):
     return None
 words=[];lines=[]
 for c,a,b,o in outs:
-    for s,e,txt in PH[c]:
+    for s,e,txt in PH.get(c,[]):
         if s< a-0.1 or e> b+0.3: continue
         groups=[g.split() for g in txt.split('|')]; ws=[w for g in groups for w in g]; wt=word_times(c,s,e,ws)
         idx=[]
@@ -60,27 +67,39 @@ lines[-1]['e']=round(lines[-1]['e']+0.6,3)
 frames=[]
 for g,(c,a,b,o) in enumerate(outs):
     n0=round(o*FPS); n1=round((o+b-a)*FPS)
-    for n in range(n0,n1): frames.append({'g':g,'c':c,'k':min(int(round(a*FPS))+(n-n0), {1:623,2:749,3:750}[c])})
+    for n in range(n0,n1):
+        if c=='T':
+            j=(n-n0)%220; frames.append({'g':g,'c':3,'k':530+(j if j<110 else 219-j)})
+        else: frames.append({'g':g,'c':c,'k':min(int(round(a*FPS))+(n-n0), {1:623,2:749,3:750}[c])})
 HOLD=66; tail=frames[-HOLD:]
 frames+= tail[::-1]
 TOT=len(frames)/FPS
 def wt(txt,occ=0):
     m=[w for w in words if plain(w['w'])==plain(txt)]; return m[occ]
-cut1=outs[1][3]; cut2=outs[2][3]; cut3=outs[3][3]
+cut1=outs[1][3]; cut2=outs[2][3]; cut3=outs[3][3]; cut4=outs[4][3]
+t=cut3+0.4; tb=[]
+for b in BLOCKS:
+    e=dict(b); e['s']=round(t,3)
+    if 'q' in b: e['as']=round(t+b['qd'],3); t+=b['qd']+b['ad']
+    if 'tag' in b: e['ts']=round(t,3); t+=b['tagd']
+    if 'n' in b: t+=b['nd']
+    e['e']=round(t,3); tb.append(e)
 ask=wt('أخبرني'); 
 pil_s=wt('تشهد')['s']-0.3
 pillars=[('الشهادتان',wt('تشهد')['s']),('الصلاة',wt('الصلاة')['s']),('الزكاة',wt('الزكاة')['s']),('الصوم',wt('رمضان')['s']-0.25),('الحج',wt('وتحج')['s'])]
 D={'dur':round(TOT,3),'words':words,'lines':lines,'frames':frames,
    'scenes':{'hook':[0,3.4],'name':[3.6,8.2],
-             'levels':[{'k':'islam','s':ask['s']-0.2,'e':pil_s-0.35}],
+             'levels':[{'k':'islam','s':ask['s']-0.2,'e':pil_s-0.35}]+[{'k':b['lv'],'s':b['s'],'e':b['e']-0.2} for b in tb if 'lv' in b],
+             'text':{'s':cut3,'e':cut4,'blocks':tb},
              'pillars':{'s':pil_s,'e':wt('سبيلا')['e']+0.8,'items':pillars},
-             'jump':cut3,'cuts':[cut1,cut2],
+             'jump':cut4,'cuts':[cut1,cut2,cut3],
              'summary':wt('أتاكم')['s']-0.1,
              'outro':[round(wt('مسلم')['e']+0.35,3),TOT]},
    'style':'plain',
-   'fit':{'reel':[{'z':1,'ax':.46,'ay':.38,'cx':.46*1080,'cy':.38*1920},{'z':1,'ax':.44,'ay':.40,'cx':.44*1080,'cy':.40*1920},{'z':1.06,'ax':.44,'ay':.40,'cx':.44*1080,'cy':.40*1920},{'z':1,'ax':.47,'ay':.38,'cx':.47*1080,'cy':.38*1920}],
-          'yt':[{'z':1,'s':.70,'ax':.46,'ay':.5,'cy':432},{'z':1,'s':.70,'ax':.435,'ay':.5,'cy':410},{'z':1.06,'s':.70,'ax':.435,'ay':.5,'cy':410},{'z':1,'s':.70,'ax':.47,'ay':.5,'cy':432}]}}
+   'fit':{'reel':[{'z':1,'ax':.46,'ay':.38,'cx':.46*1080,'cy':.38*1920},{'z':1,'ax':.44,'ay':.40,'cx':.44*1080,'cy':.40*1920},{'z':1.06,'ax':.44,'ay':.40,'cx':.44*1080,'cy':.40*1920},{'z':1.1,'blur':1,'ax':.44,'ay':.40,'cx':.44*1080,'cy':.40*1920},{'z':1,'ax':.47,'ay':.38,'cx':.47*1080,'cy':.38*1920}],
+          'yt':[{'z':1,'s':.70,'ax':.46,'ay':.5,'cy':432},{'z':1,'s':.70,'ax':.435,'ay':.5,'cy':410},{'z':1.06,'s':.70,'ax':.435,'ay':.5,'cy':410},{'z':1.1,'blur':1,'s':.70,'ax':.435,'ay':.5,'cy':410},{'z':1,'s':.70,'ax':.47,'ay':.5,'cy':432}]}}
 json.dump(D,open('work/data.json','w'),ensure_ascii=False)
-print('dur',DUR,'total',TOT,'frames',len(frames),'cuts',cut1,cut2,cut3)
+json.dump(SEG,open('work/seg.json','w'))
+print('TD',TD,'dur',DUR,'total',TOT,'frames',len(frames),'cuts',cut1,cut2,cut3)
 for l in lines: print(round(l['s'],2),round(l['e'],2),' '.join(words[i]['w'] for i in l['words']))
 print(D['scenes'])

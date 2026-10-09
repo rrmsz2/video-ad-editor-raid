@@ -174,7 +174,7 @@ function drawProgress(t){
 // ---------- header / title ----------
 function drawHeader(t){
   const S=D.scenes, hookE=S.hook[1];
-  const pyr = S.levels.some(l=>t>=l.s-.4 && t<l.e+.4) || (t>=S.pillars.s-.4 && t<S.pillars.e+.4) || t>=S.summary-.4;
+  const pyr = S.levels.some(l=>t>=l.s-.4 && t<l.e+.4) || (t>=S.pillars.s-.4 && t<S.pillars.e+.4) || t>=S.summary-.4 || (S.text && t>=S.text.s-.3 && t<S.text.e+.3);
   // big hook title
   const hk = win(t,S.hook[0],hookE,.25,.4);
   if(MODE==='reel'){
@@ -203,20 +203,20 @@ function drawHeader(t){
     X.font='700 110px Kufi'; X.fillStyle=TH.acc2; X.fillText('مراتب الدين',0,0);
     X.shadowBlur=0; ornLine(0,80,260,a);
     X.font='700 40px Cairo'; X.fillStyle=TH.ink; X.globalAlpha=a*.9;
-    X.fillText('حديث جبريل عليه السلام',0,135);
+    if(!(S.text && t>=S.text.s-.3 && t<S.text.e+.3)) X.fillText('حديث جبريل عليه السلام',0,135);
     X.restore();
-    const busy = S.levels.some(l=>t>=l.s-.4 && t<l.e+.4) || (t>=S.pillars.s-.4 && t<S.pillars.e+.4) || t>=S.summary-.4 || (t>=S.name[0]&&t<S.name[1]);
+    const busy = S.levels.some(l=>t>=l.s-.4 && t<l.e+.4) || (t>=S.pillars.s-.4 && t<S.pillars.e+.4) || t>=S.summary-.4 || (t>=S.name[0]&&t<S.name[1]) || (S.text && t>=S.text.s-.4 && t<S.text.e+.4);
     const qa = clamp((t-S.hook[1])/.5) * (1-clamp(busy?1:0));
     if(qa>0){ X.save(); X.globalAlpha=qa*.9; rosette(540,500,170,t*.08,.5); X.restore(); }
   }
 }
 
 // ---------- the three levels (pyramid) ----------
-const LV=[{k:'islam',t:'الإسلام',d:'أعمال الظاهر'},{k:'iman',t:'الإيمان',d:'أعمال القلب'},{k:'ihsan',t:'الإحسان',d:'أعلى المراتب'}];
+const LV=[{k:'islam',t:'الإسلام',d:'الأعمال الظاهرة'},{k:'iman',t:'الإيمان',d:'الاعتقاد الباطن'},{k:'ihsan',t:'الإحسان',d:'أعلى المراتب'}];
 function drawLevels(t){
   const S=D.scenes;
   let vis=0, act=-1, intro=0;
-  const cur=S.levels.find(l=>t>=l.s-.4 && t<l.e+.4);
+  const cur=S.levels.find(l=>t>=l.s-.4 && t<l.e+.4 && !(MODE!=='reel' && S.text && l.s>=S.text.s));
   if(cur){ vis=win(t,cur.s-.4,cur.e+.4,.4,.4); act=LV.findIndex(v=>v.k===cur.k); intro=cur.s; }
   else if(t>=S.summary){ vis=clamp((t-S.summary)/.4); act=3; intro=S.summary; }
   else return;
@@ -292,6 +292,69 @@ function drawTransitions(t){
   }
 }
 
+
+// ---------- text bridge: the part of the hadith that is not in the recordings ----------
+function wrapLines(text,maxW){ const ws=text.split(' '); const L=[]; let cur='';
+  for(const w of ws){ const tr=cur?cur+' '+w:w; if(X.measureText(tr).width>maxW && cur){ L.push(cur); cur=w; } else cur=tr; } if(cur) L.push(cur); return L; }
+function drawTextSeg(t){
+  const T=D.scenes.text; if(!T || t<T.s-.5 || t>T.e+.5) return;
+  const R = MODE==='reel' ? {cx:520,qy:700,ay:820,maxW:820,fa:68,hy:300} : {cx:540,qy:400,ay:520,maxW:840,fa:58,hy:-1};
+  X.save(); X.direction='rtl'; X.textAlign='center'; X.textBaseline='middle';
+  for(const b of T.blocks){
+    const a=win(t,b.s,b.e,.35,.35); if(a<=0) continue;
+    X.save(); X.globalAlpha=a;
+    if(b.hd && R.hy>0){ X.font='700 70px Kufi'; X.fillStyle=TH.acc2; X.shadowColor='rgba(0,0,0,.6)'; X.shadowBlur=16; X.fillText(b.hd,540,R.hy); X.shadowBlur=0; ornLine(540,R.hy+60,220,a); }
+    if(b.n){ const p=eob(clamp((t-b.s)/.5)); X.translate(R.cx,(R.qy+R.ay)/2+120); X.scale(.85+.15*p,.85+.15*p);
+      X.font='700 92px Amiri'; X.fillStyle=TH.acc2; X.shadowColor='rgba(0,0,0,.6)'; X.shadowBlur=20; X.fillText(b.n,0,0); X.restore(); continue; }
+    // question (Jibril)
+    const qp=eob(clamp((t-b.s)/.45));
+    X.save(); X.translate(R.cx,R.qy); X.scale(.85+.15*qp,.85+.15*qp);
+    X.font='700 34px Cairo'; X.fillStyle='rgba(247,241,227,.75)'; X.fillText('قال جبريل عليه السلام:',0,-80);
+    X.font='700 66px Amiri'; X.fillStyle=TH.ink; X.shadowColor='rgba(0,0,0,.6)'; X.shadowBlur=14; X.fillText(b.q,0,4);
+    X.restore();
+    if(t<b.as-.05){ X.restore(); continue; }
+    // answer (the Prophet ﷺ)
+    const ap=clamp((t-b.as)/.4);
+    X.save(); X.globalAlpha=a*ap;
+    X.font='700 32px Cairo'; X.fillStyle=TH.acc2; X.fillText('قال النبي ﷺ:',R.cx,R.ay);
+    if(b.chips){
+      X.font=`700 ${R.fa}px Amiri`; X.fillStyle=TH.ink; X.fillText(b.lead,R.cx,R.ay+80);
+      const cw=MODE==='reel'?390:400, chh=MODE==='reel'?86:72, gap=MODE==='reel'?16:12, top=R.ay+(MODE==='reel'?150:130);
+      const per=(b.ad-1.2)/b.chips.length;
+      b.chips.forEach((txt,i)=>{
+        const full=i>=4, row=full? 2+(i-4) : Math.floor(i/2), col=i%2;
+        const x= full? R.cx : R.cx + (col===0? (cw+gap)/2 : -(cw+gap)/2);
+        const w= full? 2*cw+gap : cw, y=top+row*(chh+gap)+chh/2;
+        const ts=b.as+.5+i*per, on=t>=ts, pp=eob(clamp((t-ts)/.35));
+        if(!on) return;
+        X.save(); X.translate(x,y); X.scale(.8+.2*pp,.8+.2*pp);
+        const cur = t<ts+per;
+        rr(-w/2,-chh/2,w,chh,chh/2);
+        const gg=X.createLinearGradient(0,-chh/2,0,chh/2); gg.addColorStop(0,'#F3D58C'); gg.addColorStop(1,'#C9963B');
+        X.fillStyle= cur? gg : 'rgba(9,20,44,.85)'; if(cur){ X.shadowColor='rgba(243,213,140,.7)'; X.shadowBlur=26; }
+        X.fill(); X.shadowBlur=0; X.lineWidth=2.5; X.strokeStyle='rgba(243,213,140,.9)'; X.stroke();
+        X.font=`700 ${MODE==='reel'?(full?48:52):(full?42:46)}px Amiri`; X.fillStyle= cur? '#0B1A35' : TH.ink; X.fillText(txt,0,6);
+        X.restore();
+      });
+      if(b.tag && t>=b.ts){ const tp=eob(clamp((t-b.ts)/.4)); X.save(); X.translate(R.cx, top+4*(chh+gap)+(MODE==='reel'?40:30)); X.scale(.8+.2*tp,.8+.2*tp);
+        X.font='700 56px Amiri'; X.fillStyle=TH.acc2; X.fillText(b.tag,0,0); X.restore(); }
+    } else {
+      X.font=`700 ${R.fa}px Amiri`;
+      const L=wrapLines(b.a,R.maxW), lh=R.fa*1.55, h=L.length*lh+60, y0=R.ay+50;
+      X.fillStyle='rgba(9,20,44,.82)'; rr(R.cx-R.maxW/2-40,y0,R.maxW+80,h,30); X.fill(); X.strokeStyle='rgba(217,174,85,.7)'; X.lineWidth=2.5; X.stroke();
+      // reveal word by word over the first 65% of the answer
+      const words=b.a.split(' ').length, shown=Math.ceil(words*clamp((t-b.as)/(b.ad*.65)));
+      let k=0;
+      L.forEach((ln,li)=>{ const ws=ln.split(' '); const y=y0+30+lh*(li+.5)+4;
+        const full=X.measureText(ln).width; let x=R.cx+full/2; const sp=X.measureText(' ').width;
+        ws.forEach(w=>{ const ww=X.measureText(w).width; const vis=k<shown, isNew=k===shown-1; k++;
+          X.save(); X.textAlign='center'; X.fillStyle= vis ? (isNew? TH.acc2 : TH.ink) : 'rgba(247,241,227,.12)'; X.fillText(w,x-ww/2,y); X.restore(); x-=ww+sp; }); });
+    }
+    X.restore(); X.restore();
+  }
+  X.restore();
+}
+
 // ---------- speaker name lower third ----------
 function drawName(t){
   const [s,e]=D.scenes.name; const a=win(t,s,e,.35,.35); if(a<=0) return;
@@ -338,12 +401,14 @@ function goldFrame(x,y,w,h,r){
   X.restore();
 }
 function topBusy(t){ const S=D.scenes; return Math.max(
-  ...S.levels.map(l=>win(t,l.s-.4,l.e+.4,.4,.4)), win(t,S.pillars.s-.4,S.pillars.e+.4,.4,.4), clamp((t-S.summary+.4)/.4), win(t,S.hook[0],S.hook[1]+.3,.01,.4)); }
+  ...S.levels.map(l=>win(t,l.s-.4,l.e+.4,.4,.4)), win(t,S.pillars.s-.4,S.pillars.e+.4,.4,.4), clamp((t-S.summary+.4)/.4), win(t,S.hook[0],S.hook[1]+.3,.01,.4), S.text?win(t,S.text.s,S.text.e,.4,.4):0); }
 function drawPlain(t, fi, fit){
   const z = (1 + .07*(1-ease(clamp(t/0.9)))) * fit.z;
   if(MODE==='reel'){
     const s=z, w=fi.width*s, h=fi.height*s;
+    if(fit.blur){ X.save(); X.filter='blur(26px)'; }
     X.drawImage(fi, fit.cx - w*fit.ax, fit.cy - h*fit.ay, w, h);
+    if(fit.blur){ X.restore(); X.fillStyle='rgba(9,20,44,.58)'; X.fillRect(0,0,W,H); }
     // top shade for titles/graphics (stronger when a graphic is up)
     const k=.45+.5*topBusy(t);
     const g=X.createLinearGradient(0,0,0,700); g.addColorStop(0,`rgba(9,20,44,${.9*k})`); g.addColorStop(.6,`rgba(9,20,44,${.55*k})`); g.addColorStop(1,'rgba(9,20,44,0)');
@@ -357,7 +422,9 @@ function drawPlain(t, fi, fit){
     const cx=1400, top=36, aw=640;
     X.save(); archPath(cx,top,aw,H+40); X.clip();
     const s=fit.s*z, w=fi.width*s, h=fi.height*s;
+    if(fit.blur){ X.save(); X.filter='blur(22px)'; }
     X.drawImage(fi, cx - w*fit.ax, fit.cy - h*fit.ay, w, h);
+    if(fit.blur){ X.restore(); X.fillStyle='rgba(9,20,44,.45)'; X.fillRect(0,0,W,H); }
     const vg=X.createLinearGradient(0,H-260,0,H); vg.addColorStop(0,'rgba(9,20,44,0)'); vg.addColorStop(1,'rgba(9,20,44,.5)'); X.fillStyle=vg; X.fillRect(0,0,W,H);
     X.restore();
     X.save(); archPath(cx,top,aw,H+40); X.lineWidth=5; X.strokeStyle='rgba(217,174,85,.95)'; X.shadowColor='rgba(243,213,140,.6)'; X.shadowBlur=22; X.stroke();
@@ -369,7 +436,7 @@ async function frame(t, fsrc, msrc, fit){
   X.setTransform(1,0,0,1,0,0); X.globalAlpha=1; X.globalCompositeOperation='source-over';
   if(D.style==='plain'){ const fi=await loadImg(fsrc); drawPlain(t,fi,fit); }
   else { const [fi,mi]=await Promise.all([loadImg(fsrc),loadImg(msrc)]); drawBack(t); drawPerson(t,fi,mi,fit); }
-  drawLevels(t); drawPillars(t); drawHeader(t); drawName(t); drawOutro(t); drawCaptions(t); drawProgress(t); drawTransitions(t);
+  drawLevels(t); drawPillars(t); drawHeader(t); drawName(t); drawOutro(t); drawTextSeg(t); drawCaptions(t); drawProgress(t); drawTransitions(t);
   return true;
 }
 </script></body></html>
