@@ -77,8 +77,9 @@ D={'dur':round(TOT,3),'words':words,'lines':lines,'frames':frames,
              'jump':cut3,'cuts':[cut1,cut2],
              'summary':wt('أتاكم')['s']-0.1,
              'outro':[round(wt('مسلم')['e']+0.35,3),TOT]},
-   'fit':{'reel':[{'s':.949,'cx':579,'bottom':1920},{'s':.976,'cx':609,'bottom':1920},{'s':1.035,'cx':613,'bottom':1920},{'s':.938,'cx':573,'bottom':1920}],
-          'yt':[{'s':.719,'cx':1430,'bottom':1080},{'s':.740,'cx':1452,'bottom':1080},{'s':.777,'cx':1455,'bottom':1080},{'s':.711,'cx':1425,'bottom':1080}]}}
+   'style':'plain',
+   'fit':{'reel':[{'z':1,'ax':.46,'ay':.38,'cx':.46*1080,'cy':.38*1920},{'z':1,'ax':.44,'ay':.40,'cx':.44*1080,'cy':.40*1920},{'z':1.06,'ax':.44,'ay':.40,'cx':.44*1080,'cy':.40*1920},{'z':1,'ax':.47,'ay':.38,'cx':.47*1080,'cy':.38*1920}],
+          'yt':[{'z':1,'s':.70,'ax':.46,'ay':.5,'cy':432},{'z':1,'s':.70,'ax':.435,'ay':.5,'cy':410},{'z':1.06,'s':.70,'ax':.435,'ay':.5,'cy':410},{'z':1,'s':.70,'ax':.47,'ay':.5,'cy':432}]}}
 json.dump(D,open('work/data.json','w'),ensure_ascii=False)
 print('dur',DUR,'total',TOT,'frames',len(frames),'cuts',cut1,cut2,cut3)
 for l in lines: print(round(l['s'],2),round(l['e'],2),' '.join(words[i]['w'] for i in l['words']))

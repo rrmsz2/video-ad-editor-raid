@@ -16,7 +16,7 @@ canvas{display:block}
 <canvas id="c"></canvas>
 <script>
 // ---------- theme ----------
-const TH = { bg0:'#0B3A33', bg1:'#072522', bg2:'#031110', ink:'#F7F1E3', acc:'#D9AE55', acc2:'#F3D58C', card:'rgba(4,22,20,0.78)' };
+const TH = { bg0:'#16305A', bg1:'#0B1A35', bg2:'#040A18', ink:'#F7F1E3', acc:'#D9AE55', acc2:'#F3D58C', card:'rgba(9,20,44,0.80)' };
 let D = null;            // data.json (set by renderer)
 let W = 1080, H = 1920, MODE = 'reel';
 const cv = document.getElementById('c'); const X = cv.getContext('2d');
@@ -234,7 +234,7 @@ function drawLevels(t){
     X.beginPath(); X.moveTo(-wt/2,-R.h/2); X.lineTo(wt/2,-R.h/2); X.lineTo(wb/2,R.h/2); X.lineTo(-wb/2,R.h/2); X.closePath();
     if(on){ const gg=X.createLinearGradient(0,-R.h/2,0,R.h/2); gg.addColorStop(0,'#F3D58C'); gg.addColorStop(1,'#C9963B'); X.fillStyle=gg;
       X.shadowColor='rgba(243,213,140,.7)'; X.shadowBlur=act===3?10:30; }
-    else X.fillStyle= lit ? 'rgba(217,174,85,.30)' : 'rgba(4,22,20,.80)';
+    else X.fillStyle= lit ? 'rgba(217,174,85,.30)' : 'rgba(9,20,44,.80)';
     X.fill(); X.shadowBlur=0; X.lineWidth=2.5; X.strokeStyle='rgba(243,213,140,.85)'; X.stroke();
     X.fillStyle = on ? '#0A2A26' : TH.ink;
     const big = MODE==='reel'?58:58;
@@ -265,7 +265,7 @@ function drawPillars(t){
     rr(-w/2,-h/2,w,h,h/2);
     if(on){ const gg=X.createLinearGradient(0,-h/2,0,h/2); gg.addColorStop(0,'#F3D58C'); gg.addColorStop(1,'#C9963B'); X.fillStyle=gg;
       if(cur){ X.shadowColor='rgba(243,213,140,.75)'; X.shadowBlur=30; } }
-    else X.fillStyle='rgba(4,22,20,.82)';
+    else X.fillStyle='rgba(9,20,44,.82)';
     X.fill(); X.shadowBlur=0; X.lineWidth=2.5; X.strokeStyle='rgba(243,213,140,.85)'; X.stroke();
     X.font=`800 ${lab.length>6?40:44}px Cairo`; X.fillStyle= on ? '#0A2A26' : 'rgba(247,241,227,.55)'; X.fillText(lab,24,4);
     // number medallion (right side, RTL start)
@@ -300,7 +300,7 @@ function drawName(t){
   X.save(); X.globalAlpha=a; X.direction='rtl'; X.textBaseline='middle'; X.textAlign='center';
   X.translate(R.x,R.y);
   const w=560*p+40;
-  X.fillStyle='rgba(4,22,20,.85)'; rr(-w/2,-62,w,124,22); X.fill(); X.strokeStyle=TH.acc; X.lineWidth=2.5; X.stroke();
+  X.fillStyle='rgba(9,20,44,.85)'; rr(-w/2,-62,w,124,22); X.fill(); X.strokeStyle=TH.acc; X.lineWidth=2.5; X.stroke();
   X.beginPath(); X.rect(-w/2,-62,w,124); X.clip();
   X.font='800 54px Cairo'; X.fillStyle=TH.ink; X.fillText('إسلام حجازي',0,-18);
   X.font='700 34px Cairo'; X.fillStyle=TH.acc2; X.fillText('أبو معاذ',0,32);
@@ -313,7 +313,7 @@ function drawOutro(t){
   X.save(); X.globalAlpha=a; X.direction='rtl'; X.textAlign='center'; X.textBaseline='middle';
   const R = MODE==='reel' ? {x:540,y:1215,w:760} : {x:540,y:800,w:820};
   const p=eob(clamp((t-s)/.5)); X.translate(R.x,R.y); X.scale(.85+.15*p,.85+.15*p);
-  X.fillStyle='rgba(4,22,20,.88)'; rr(-R.w/2,-80,R.w,160,28); X.fill(); X.strokeStyle=TH.acc; X.lineWidth=3; X.stroke();
+  X.fillStyle='rgba(9,20,44,.88)'; rr(-R.w/2,-80,R.w,160,28); X.fill(); X.strokeStyle=TH.acc; X.lineWidth=3; X.stroke();
   X.font='800 50px Cairo'; X.fillStyle=TH.acc2; X.fillText('شاركها لتعمّ الفائدة',0,-24);
   X.font='700 34px Cairo'; X.fillStyle=TH.ink; X.fillText('إسلام حجازي  •  أبو معاذ',0,36);
   X.restore();
@@ -327,11 +327,48 @@ async function setup(data, mode){
   return true;
 }
 function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+
+// ---------- plain style: original background kept, no cutout ----------
+function goldFrame(x,y,w,h,r){
+  X.save(); X.strokeStyle='rgba(217,174,85,.9)'; X.lineWidth=3; X.shadowColor='rgba(0,0,0,.45)'; X.shadowBlur=10;
+  rr(x,y,w,h,r); X.stroke(); X.shadowBlur=0;
+  X.globalAlpha=.55; X.lineWidth=1.5; rr(x+12,y+12,w-24,h-24,Math.max(0,r-10)); X.stroke();
+  X.globalAlpha=1; X.fillStyle=TH.acc;
+  for(const [cx,cy] of [[x,y+h/2],[x+w,y+h/2],[x+w/2,y],[x+w/2,y+h]]){ X.save(); X.translate(cx,cy); X.rotate(Math.PI/4); X.fillRect(-9,-9,18,18); X.restore(); }
+  X.restore();
+}
+function topBusy(t){ const S=D.scenes; return Math.max(
+  ...S.levels.map(l=>win(t,l.s-.4,l.e+.4,.4,.4)), win(t,S.pillars.s-.4,S.pillars.e+.4,.4,.4), clamp((t-S.summary+.4)/.4), win(t,S.hook[0],S.hook[1]+.3,.01,.4)); }
+function drawPlain(t, fi, fit){
+  const z = (1 + .07*(1-ease(clamp(t/0.9)))) * fit.z;
+  if(MODE==='reel'){
+    const s=z, w=fi.width*s, h=fi.height*s;
+    X.drawImage(fi, fit.cx - w*fit.ax, fit.cy - h*fit.ay, w, h);
+    // top shade for titles/graphics (stronger when a graphic is up)
+    const k=.45+.5*topBusy(t);
+    const g=X.createLinearGradient(0,0,0,700); g.addColorStop(0,`rgba(9,20,44,${.9*k})`); g.addColorStop(.6,`rgba(9,20,44,${.55*k})`); g.addColorStop(1,'rgba(9,20,44,0)');
+    X.fillStyle=g; X.fillRect(0,0,W,700);
+    const b=X.createLinearGradient(0,1250,0,H); b.addColorStop(0,'rgba(9,20,44,0)'); b.addColorStop(1,'rgba(9,20,44,.55)'); X.fillStyle=b; X.fillRect(0,1250,W,H-1250);
+    const vg=X.createRadialGradient(W/2,H*.45,W*.45,W/2,H*.45,H*.75); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.35)'); X.fillStyle=vg; X.fillRect(0,0,W,H);
+    goldFrame(26,26,W-52,H-52,34);
+  } else {
+    drawBack(t);
+    // video inside a mihrab-shaped window on the right
+    const cx=1400, top=36, aw=640;
+    X.save(); archPath(cx,top,aw,H+40); X.clip();
+    const s=fit.s*z, w=fi.width*s, h=fi.height*s;
+    X.drawImage(fi, cx - w*fit.ax, fit.cy - h*fit.ay, w, h);
+    const vg=X.createLinearGradient(0,H-260,0,H); vg.addColorStop(0,'rgba(9,20,44,0)'); vg.addColorStop(1,'rgba(9,20,44,.5)'); X.fillStyle=vg; X.fillRect(0,0,W,H);
+    X.restore();
+    X.save(); archPath(cx,top,aw,H+40); X.lineWidth=5; X.strokeStyle='rgba(217,174,85,.95)'; X.shadowColor='rgba(243,213,140,.6)'; X.shadowBlur=22; X.stroke();
+    X.shadowBlur=0; archPath(cx,top-22,aw+44,H+40); X.lineWidth=1.8; X.strokeStyle='rgba(217,174,85,.5)'; X.stroke(); X.restore();
+  }
+}
+
 async function frame(t, fsrc, msrc, fit){
-  const [fi,mi]=await Promise.all([loadImg(fsrc),loadImg(msrc)]);
   X.setTransform(1,0,0,1,0,0); X.globalAlpha=1; X.globalCompositeOperation='source-over';
-  drawBack(t);
-  drawPerson(t,fi,mi,fit);
+  if(D.style==='plain'){ const fi=await loadImg(fsrc); drawPlain(t,fi,fit); }
+  else { const [fi,mi]=await Promise.all([loadImg(fsrc),loadImg(msrc)]); drawBack(t); drawPerson(t,fi,mi,fit); }
   drawLevels(t); drawPillars(t); drawHeader(t); drawName(t); drawOutro(t); drawCaptions(t); drawProgress(t); drawTransitions(t);
   return true;
 }
@@ -339,10 +376,10 @@ async function frame(t, fsrc, msrc, fit){
 <script>
 async function cover(fsrc, msrc, fit){
   const [fi,mi]=await Promise.all([loadImg(fsrc),loadImg(msrc)]);
-  X.setTransform(1,0,0,1,0,0); drawBack(4); drawPerson(5,fi,mi,fit);
+  X.setTransform(1,0,0,1,0,0); if(D.style==='plain') drawPlain(5,fi,fit); else { drawBack(4); drawPerson(5,fi,mi,fit); }
   X.save(); X.direction='rtl'; X.textAlign='center'; X.textBaseline='middle';
   const R = MODE==='reel' ? {x:540,y1:1150,y2:1320,f1:190,f2:70,card:[90,1020,900,420]} : {x:520,y1:430,y2:610,f1:200,f2:72,card:null};
-  if(R.card){ const [x,y,w,h]=R.card; const g=X.createLinearGradient(0,y,0,H); g.addColorStop(0,'rgba(4,22,20,0)'); g.addColorStop(.2,'rgba(4,22,20,.85)'); g.addColorStop(1,'rgba(4,22,20,.92)'); X.fillStyle=g; X.fillRect(0,y,W,H-y); }
+  if(R.card){ const [x,y,w,h]=R.card; const g=X.createLinearGradient(0,y,0,H); g.addColorStop(0,'rgba(9,20,44,0)'); g.addColorStop(.2,'rgba(9,20,44,.85)'); g.addColorStop(1,'rgba(9,20,44,.92)'); X.fillStyle=g; X.fillRect(0,y,W,H-y); }
   X.shadowColor='rgba(0,0,0,.7)'; X.shadowBlur=30;
   X.font=`700 ${R.f1}px Kufi`; X.fillStyle=TH.acc2; X.fillText('مراتب الدين',R.x,R.y1);
   X.shadowBlur=0; ornLine(R.x,R.y1+R.f1*.62,300,1);
