@@ -5,7 +5,7 @@
   "fonts": { "display": "Cairo", "body": "Tajawal", "num": "Inter", "mono": "Inter" },
   "post": { "grain": 0.025, "vignette": 0.22 },
   "timing": { "snap": "none", "startPad": 0 },
-  "music": { "key": "D", "scale": "minor", "progression": [0, 5, 3, 4], "level": -9, "duck": 0, "top": { "hat": 15, "pluck": 3 } },
+  "music": { "key": "D", "scale": "minor", "progression": [0, 5, 3, 4], "level": -9, "duck": -7, "top": { "hat": 15, "pluck": 3 } },
   "sections": [
     { "name": "intro", "at": 0 },
     { "name": "build", "at": "scene:support" },

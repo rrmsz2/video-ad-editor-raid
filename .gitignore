@@ -5,3 +5,4 @@ node_modules/
 majed-video.plugin
 projects/*/renders/
 projects/*/timeline.json
+projects/*/vo/
