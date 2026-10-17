@@ -21,7 +21,7 @@ MOTION.scene({
       X.fillStyle = 'rgba(255,255,255,.07)'; X.strokeStyle = col; X.lineWidth = 3; X.beginPath(); X.roundRect(-120, -120, 240, 240, 36); X.fill(); X.stroke();
       icon(X, ic, 0, 0, 120, col, 7); X.restore();
     });
-    emblem(X, ctx, 540, 520, 150, at(lt, 2.3, 3.4, 'linear'), ctx.beatPulse(t, 7));
+    emblem(X, ctx, 540, 500, 180, at(lt, 2.3, 3.4, 'linear'), ctx.beatPulse(t, 7));
     ctx.text(X, 'دائرة تقنية المعلومات', 540, 740, { family: 'body', weight: 700, size: 42, color: P.ink, alpha: at(lt, 3.2, 3.8) });
     ctx.text(X, 'محافظة الظاهرة', 540, 792, { family: 'body', weight: 400, size: 36, color: P.mut, alpha: at(lt, 3.3, 3.9) });
 

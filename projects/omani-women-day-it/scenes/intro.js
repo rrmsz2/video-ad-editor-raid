@@ -11,12 +11,12 @@ MOTION.scene({
 
     // الشعار: يُرسم بالمنتصف ثم يصعد ويصغر ليفسح للعنوان
     const k = at(lt, .2, 2.2, 'linear');
-    const [cy, r] = kf(lt, [[2.3, [880, 230]], [3.1, [520, 150], 'expoInOut']]);
+    const [cy, r] = kf(lt, [[2.3, [860, 300]], [3.1, [490, 185], 'expoInOut']]);
     emblem(X, ctx, 540, cy, r, k, ctx.beatPulse(t, 7) * at(lt, 2.2, 2.4));
     // اسم الجهة تحت الشعار
     const kn = at(lt, 1.6, 2.3, 'expoOut');
     if (kn > 0) {
-      const ny = kf(lt, [[2.3, 1190], [3.1, 720, 'expoInOut']]);
+      const ny = kf(lt, [[2.3, 1230], [3.1, 740, 'expoInOut']]);
       ctx.text(X, 'دائرة تقنية المعلومات', 540, ny, { family: 'body', weight: 700, size: 44, color: P.ink, alpha: kn });
       ctx.text(X, 'محافظة الظاهرة', 540, ny + 56, { family: 'body', weight: 400, size: 38, color: P.mut, alpha: kn });
     }

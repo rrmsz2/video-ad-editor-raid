@@ -3,6 +3,7 @@
   "fps": 30, "width": 1080, "height": 1920, "bpm": 112, "beatsPerBar": 4, "beatOffset": 0,
   "palette": { "bg": "#0B1F3A", "ink": "#F5F7FA", "acc": "#00B37A", "clay": "#DB161B", "hi": "#5EEAD4", "mut": "#8DA2BF" },
   "fonts": { "display": "Cairo", "body": "Tajawal", "num": "Inter", "mono": "Inter" },
+  "images": { "logo": "assets/logo.png" },
   "post": { "grain": 0.025, "vignette": 0.22 },
   "timing": { "snap": "none", "startPad": 0 },
   "music": { "key": "D", "scale": "minor", "progression": [0, 5, 3, 4], "level": -9, "duck": -7, "top": { "hat": 15, "pluck": 3 } },

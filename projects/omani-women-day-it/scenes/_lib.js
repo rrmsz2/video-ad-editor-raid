@@ -122,6 +122,23 @@ export function emblem(X, ctx, cx, cy, r, k, pulse = 0, alpha = 1) {
   // توهّج تحت الشعار
   const g = X.createRadialGradient(0, 0, r * .2, 0, 0, r * 1.5); g.addColorStop(0, 'rgba(94,234,212,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
   X.fillStyle = g; X.globalAlpha *= ctx.clamp(k * 2); X.beginPath(); X.arc(0, 0, r * 1.5, 0, TAU); X.fill(); X.globalAlpha = alpha;
+  // الشعار المرفوع: السداسي يُرسم خطاً ثم تظهر الوردة داخله (السداسي في الصورة: المركز 626,610 ونصف القطر 575 من 1254)
+  const logo = ctx.img('logo');
+  if (logo) {
+    const kh = E.expoOut(ctx.clamp(k * 1.6)), kl = E.cubicOut(ctx.clamp(k * 1.6 - .45));
+    if (kl < 1) { X.save(); X.globalAlpha *= 1 - kl; ctx.drawPath(X, hex, kh, { width: 6, color: P.hi, smooth: false, glow: 18, glowColor: P.hi, tip: { r: 7, color: '#fff', glow: 20 } }); X.restore(); }
+    if (kl > 0) {
+      const s = r / 575 * (.94 + .06 * kl);
+      X.save(); X.globalAlpha = alpha * kl;
+      X.beginPath(); hex.forEach(([x, y], i) => i ? X.lineTo(x * 1.035, y * 1.035) : X.moveTo(x * 1.035, y * 1.035)); X.clip();
+      X.drawImage(logo, -626 * s, -610 * s, 1254 * s, 1254 * s);
+      // لمعة تمر قطرياً بعد الظهور
+      const ks = ctx.clamp(k * 1.6 - 1.05) * 1.4;
+      if (ks > 0 && ks < 1) { const gx = -r * 1.4 + ks * r * 2.8, g2 = X.createLinearGradient(gx - 90, -r, gx + 90, r); g2.addColorStop(0, 'rgba(255,255,255,0)'); g2.addColorStop(.5, 'rgba(255,255,255,.22)'); g2.addColorStop(1, 'rgba(255,255,255,0)'); X.globalCompositeOperation = 'screen'; X.fillStyle = g2; X.fillRect(-r * 1.2, -r * 1.2, r * 2.4, r * 2.4); }
+      X.restore();
+    }
+    X.restore(); return;
+  }
   // السداسي (رسم خط)
   ctx.drawPath(X, hex, E.expoOut(ctx.clamp(k * 1.2)), { width: 7, color: P.hi, smooth: false, glow: 18, glowColor: P.hi, tip: { r: 7, color: '#fff', glow: 20 } });
   // عقد على الرؤوس
