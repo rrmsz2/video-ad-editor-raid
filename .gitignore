@@ -3,3 +3,5 @@ node_modules/
 *.mp4
 .DS_Store
 majed-video.plugin
+projects/*/renders/
+projects/*/timeline.json

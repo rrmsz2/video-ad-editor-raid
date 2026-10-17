@@ -1,0 +1,260 @@
+[
+{
+"type": "shimmer",
+"at": "scene:intro+0.2",
+"gain": 0.8
+},
+{
+"type": "impact",
+"at": "scene:intro+3.2",
+"gain": 0.9
+},
+{
+"type": "pop",
+"at": "scene:intro+5.0",
+"gain": 0.7
+},
+{
+"type": "riser",
+"at": "scene:support+0",
+"gain": 0.6
+},
+{
+"type": "typing",
+"at": "scene:support+0.7",
+"dur": 6.2,
+"gain": 0.55
+},
+{
+"type": "tick",
+"at": "scene:support+1.3",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+2.5",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+3.6",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+4.5",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+5.2",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+5.7",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+6.1",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+6.45",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:support+6.75",
+"gain": 0.6
+},
+{
+"type": "typing",
+"at": "scene:support+7.4",
+"dur": 1.0,
+"gain": 0.5
+},
+{
+"type": "typing",
+"at": "scene:support+8.6",
+"dur": 0.7,
+"gain": 0.5
+},
+{
+"type": "glitch",
+"at": "scene:support+10.3",
+"gain": 0.9
+},
+{
+"type": "whoosh",
+"at": "scene:support+10.9",
+"gain": 0.7
+},
+{
+"type": "whoosh",
+"at": "scene:support+11.3",
+"gain": 0.6
+},
+{
+"type": "impact",
+"at": "scene:support+12.9",
+"gain": 0.7
+},
+{
+"type": "riser",
+"at": "scene:network+0",
+"gain": 0.7
+},
+{
+"type": "whoosh",
+"at": "scene:network+0",
+"gain": 0.8
+},
+{
+"type": "shimmer",
+"at": "scene:network+0.2",
+"gain": 0.7
+},
+{
+"type": "glitch",
+"at": "scene:network+5.3",
+"gain": 0.8
+},
+{
+"type": "pop",
+"at": "scene:network+7.1",
+"gain": 0.8
+},
+{
+"type": "impact",
+"at": "scene:network+7.9",
+"gain": 0.8
+},
+{
+"type": "impact",
+"at": "scene:network+10.4",
+"gain": 0.6
+},
+{
+"type": "reverse-whoosh",
+"at": "scene:gis+0",
+"gain": 0.7
+},
+{
+"type": "swoosh-pass",
+"at": "scene:gis+0",
+"gain": 0.8
+},
+{
+"type": "tick",
+"at": "scene:gis+0.3",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:gis+1.5",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:gis+2.6",
+"gain": 0.6
+},
+{
+"type": "tick",
+"at": "scene:gis+3.7",
+"gain": 0.6
+},
+{
+"type": "pop",
+"at": "scene:gis+4.6",
+"gain": 0.6
+},
+{
+"type": "pop",
+"at": "scene:gis+4.85",
+"gain": 0.6
+},
+{
+"type": "pop",
+"at": "scene:gis+5.1",
+"gain": 0.6
+},
+{
+"type": "boom",
+"at": "scene:gis+6.9",
+"gain": 0.7
+},
+{
+"type": "boom",
+"at": "scene:gis+7.5",
+"gain": 0.7
+},
+{
+"type": "whoosh",
+"at": "scene:gis+7.6",
+"gain": 0.6
+},
+{
+"type": "whoosh",
+"at": "scene:gis+8.0",
+"gain": 0.6
+},
+{
+"type": "impact",
+"at": "scene:gis+10.2",
+"gain": 0.6
+},
+{
+"type": "whoosh",
+"at": "scene:outro+0",
+"gain": 0.7
+},
+{
+"type": "impact",
+"at": "scene:outro+2.4",
+"gain": 0.9
+},
+{
+"type": "shimmer",
+"at": "scene:outro+2.5",
+"gain": 0.8
+},
+{
+"type": "pop",
+"at": "scene:outro+3.6",
+"gain": 0.5
+},
+{
+"type": "pop",
+"at": "scene:outro+3.74",
+"gain": 0.5
+},
+{
+"type": "pop",
+"at": "scene:outro+3.88",
+"gain": 0.5
+},
+{
+"type": "pop",
+"at": "scene:outro+4.0200000000000005",
+"gain": 0.5
+},
+{
+"type": "pop",
+"at": "scene:outro+4.16",
+"gain": 0.5
+},
+{
+"type": "impact",
+"at": "scene:outro+4.6",
+"gain": 0.8
+},
+{
+"type": "boom",
+"at": "scene:outro+5.3",
+"gain": 0.6
+}
+]
