@@ -76,8 +76,8 @@ MOTION.scene({
     this.sparks.draw(X, lt);
     X.save(); X.globalAlpha = out;
     deptTag(X, ctx, 'قسم الدعم الفني', 700, at(lt, 10.7, 11.3), P.acc);
-    card(X, ctx, { y: 790, k: at(lt, 10.9, 12.0), name: 'عائشة العبرية', role: 'رئيسة قسم الدعم الفني', icons: ['headset', 'shield'] });
-    card(X, ctx, { y: 1040, k: at(lt, 11.3, 12.4), name: 'هدى الوائلية', role: 'فنية حاسب آلي', icons: ['laptop', 'wrench'] });
+    card(X, ctx, { y: 790, k: at(lt, 10.9, 12.0), name: 'عائشة العبري', role: 'رئيسة قسم الدعم الفني', icons: ['headset', 'shield'] });
+    card(X, ctx, { y: 1040, k: at(lt, 11.3, 12.4), name: 'هدى الوائلي', role: 'فنية حاسب آلي', icons: ['laptop', 'wrench'] });
     tagline(X, ctx, 'أول من يُجيب… وآخر من يترك المشكلة', 1400, 12.9, lt, { size: 56, weight: 700, color: P.hi });
     X.restore();
 

@@ -87,7 +87,7 @@ MOTION.scene({
 
     /* ── البطاقة ── */
     deptTag(X, ctx, 'قسم نظم المعلومات والشبكات', 1010, at(lt, 7.7, 8.3) * fade, P.hi);
-    card(X, ctx, { y: 1070, k: at(lt, 7.9, 9.0) * fade, name: 'علياء الدرعية', role: 'أخصائية حاسب آلي', icons: ['server', 'code'], accent: P.hi });
+    card(X, ctx, { y: 1070, k: at(lt, 7.9, 9.0) * fade, name: 'علياء الدرعي', role: 'أخصائية حاسب آلي', icons: ['server', 'code'], accent: P.hi });
     if (fade > 0) { X.save(); X.globalAlpha = fade; tagline(X, ctx, 'هي الشبكة التي لا تنقطع', 1420, 10.4, lt, { size: 62, weight: 800, color: P.ink }); X.restore(); }
 
     /* ── الخطوط تصير حدود الظاهرة ── */

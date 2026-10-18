@@ -81,8 +81,8 @@ MOTION.scene({
 
     /* ── البطاقات ── */
     deptTag(X, ctx, 'قسم نظم المعلومات الجغرافية', 960, at(lt, 7.2, 7.8), P.clay);
-    card(X, ctx, { y: 1000, h: 200, k: at(lt, 7.5, 8.6), name: 'شيخة العلوية', role: 'فنية نظم معلومات جغرافية', icons: ['pin', 'layers'], accent: P.clay, nameSize: 62, roleSize: 36 });
-    card(X, ctx, { y: 1230, h: 200, k: at(lt, 7.9, 9.0), name: 'مي البلوشية', role: 'فنية نظم معلومات جغرافية', icons: ['globe', 'satellite'], accent: P.acc, nameSize: 62, roleSize: 36 });
+    card(X, ctx, { y: 1000, h: 200, k: at(lt, 7.5, 8.6), name: 'شيخة العلوي', role: 'فنية نظم معلومات جغرافية', icons: ['pin', 'layers'], accent: P.clay, nameSize: 62, roleSize: 36 });
+    card(X, ctx, { y: 1230, h: 200, k: at(lt, 7.9, 9.0), name: 'مي البلوشي', role: 'فنية نظم معلومات جغرافية', icons: ['globe', 'satellite'], accent: P.acc, nameSize: 62, roleSize: 36 });
     tagline(X, ctx, 'ترسمان الظاهرة… طبقةً طبقة', 1500, 10.2, lt, { size: 58, weight: 800, color: P.hi });
   },
 });
