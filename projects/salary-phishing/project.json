@@ -1,0 +1,150 @@
+{
+ "name": "salary-phishing",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 100,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#0A1A2F",
+  "ink": "#F4F6FA",
+  "acc": "#E3263C",
+  "clay": "#A8142A",
+  "hi": "#27B36A",
+  "mut": "#8C9DB3"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Tajawal",
+  "num": "Inter"
+ },
+ "images": {
+  "email": "assets/email.png",
+  "browser": "assets/browser.png",
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0.03,
+  "vignette": 0.22
+ },
+ "voice": {
+  "name": "ar-OM-AbdullahNeural",
+  "rate": "-4%",
+  "pitch": "+0Hz"
+ },
+ "timing": {
+  "snap": "none",
+  "leadIn": 0.25,
+  "gap": 0.15,
+  "startPad": 0.3,
+  "tail": 1.2
+ },
+ "music": {
+  "key": "D",
+  "scale": "minor",
+  "progression": [
+   0,
+   5,
+   3,
+   6
+  ],
+  "level": -9,
+  "duck": -5,
+  "top": {
+   "hat": 14,
+   "pluck": 2
+  }
+ },
+ "sections": [
+  {
+   "name": "intro",
+   "at": 0
+  },
+  {
+   "name": "build",
+   "at": "line:l4"
+  },
+  {
+   "name": "drop",
+   "at": "line:l8"
+  },
+  {
+   "name": "outro",
+   "at": "line:l11"
+  }
+ ],
+ "scenes": [
+  {
+   "id": "hook",
+   "file": "scenes/hook.js",
+   "lines": [
+    "l1",
+    "l2"
+   ]
+  },
+  {
+   "id": "reveal",
+   "file": "scenes/reveal.js",
+   "lines": [
+    "l3"
+   ],
+   "transition": {
+    "type": "zoom",
+    "dur": 0.4
+   }
+  },
+  {
+   "id": "flags",
+   "file": "scenes/flags.js",
+   "lines": [
+    "l4",
+    "l5",
+    "l6",
+    "l7"
+   ],
+   "transition": {
+    "type": "crossfade",
+    "dur": 0.3
+   }
+  },
+  {
+   "id": "link",
+   "file": "scenes/link.js",
+   "lines": [
+    "l8",
+    "l9",
+    "l10"
+   ],
+   "transition": {
+    "type": "glitch",
+    "dur": 0.4
+   }
+  },
+  {
+   "id": "tips",
+   "file": "scenes/tips.js",
+   "lines": [
+    "l11",
+    "l12",
+    "l13"
+   ],
+   "transition": {
+    "type": "wipe",
+    "dur": 0.4,
+    "dir": "rtl"
+   }
+  },
+  {
+   "id": "outro",
+   "file": "scenes/outro.js",
+   "lines": [
+    "l14"
+   ],
+   "transition": {
+    "type": "crossfade",
+    "dur": 0.4
+   }
+  }
+ ]
+}

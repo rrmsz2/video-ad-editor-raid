@@ -116,7 +116,8 @@ def align(script_words, heard):
 
 async def tts(text, voice, rate, pitch):
     import edge_tts
-    c = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch, boundary='WordBoundary')
+    c = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch, boundary='WordBoundary',
+                           proxy=os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy'))  # cloud sessions route through a proxy
     audio = bytearray(); words = []
     async for ch in c.stream():
         if ch['type'] == 'audio': audio.extend(ch['data'])
