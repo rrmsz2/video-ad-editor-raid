@@ -30,6 +30,8 @@ MOTION.scene({ id: 'link',
     L.rect(ctx, map, [375, 1190, 746, 1245], K(w('l9', 10), .5) * (1 - kpo), { color: '#F2B33D', width: 8 });
     // l10 — password typed then stolen
     const nd = 8, [px, py] = map(390, 1290), [px1] = map(746, 1290);
+    { const k0 = K(w('l10', 2) - .05, .05); if (k0 > 0) { const [fx0, fy0] = map(378, 1266), [fx1, fy1] = map(743, 1315);
+      X.save(); X.globalAlpha = k0; X.fillStyle = '#fff'; X.fillRect(fx0, fy0, fx1 - fx0, fy1 - fy0); X.restore(); } }
     for (let i = 0; i < nd; i++) {
       const ki = K(w('l10', 2) + i * 0.13, 0.08); if (ki <= 0) continue;
       const kf2 = at(t, w('l10', 5) + i * 0.04, w('l10', 5) + 0.7 + i * 0.04, 'cubicIn');
