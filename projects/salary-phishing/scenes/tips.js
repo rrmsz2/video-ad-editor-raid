@@ -95,7 +95,7 @@ MOTION.scene({ id: 'tips',
     const items = [
       ['l11', 'افحص الرابط قبل لا تضغط', 'تأكّد إنه ينتهي بـ dhr.gov.om', 'mag'],
       ['l12', 'كلمة المرور فقط في الموقع الرسمي', 'لا تكتبها في صفحة جت من رابط', 'lock'],
-      ['l13', 'شكّيت؟ بلّغ فورًا', 'قسم تقنية المعلومات', 'mega'],
+      ['l13', 'شكّيت؟ بلّغ فورًا', 'دائرة تقنية المعلومات', 'mega'],
     ];
     items.forEach(([id, title, sub, icon], i) => {
       const s = ctx.lineSpan(id).s, k = at(t, s - .15, s + .35, 'expoOut'); if (k <= 0) return;
